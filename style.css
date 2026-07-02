@@ -1,0 +1,1508 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+}
+
+.game-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+    width: 600px;
+}
+
+.top-bar {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    justify-content: center;
+    width: 100%;
+}
+
+.balance-board {
+    font-size: 26px;
+    font-weight: bold;
+    color: #2c3e50;
+    background: #ffffff;
+    padding: 12px 35px;
+    border-radius: 24px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.pps-counter {
+    font-size: 16px;
+    color: #27ae60;
+    font-weight: 600;
+}
+
+.timer-container {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    background: #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.progress-ring {
+    transform: rotate(-90deg);
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.progress-ring__circle {
+    transition: stroke-dashoffset 0.1s linear;
+    stroke-linecap: round;
+}
+
+.timer-icon {
+    font-size: 20px;
+    z-index: 2;
+    user-select: none;
+}
+
+/* Кнопка-иконка вызова магазина */
+#anchor {
+    font-size: 24px;
+    background: #ffffff;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border: #2ecc71 solid 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.1s;
+    
+    &:active {
+        transform: scale(0.9);
+    }
+}
+
+/* === ОБНОВЛЕННЫЙ СТИЛЬ МАГАЗИНА С ПОПОВЕРОМ === */
+#shop {
+    opacity: 0;
+    gap: 15px;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 360px; /* Идеальный размер для экрана телефона */
+    box-sizing: border-box;
+    transform: translateY(-20px);
+    transition: all 0.3s allow-discrete;
+    border: none;
+    flex-direction: column;
+
+    &:popover-open {
+        display: flex;
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Затемнение фона за магазином, пока он открыт */
+#shop::backdrop {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(3px); /* Плавное размытие игры */
+}
+
+@starting-style {
+    #shop:popover-open {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+/* Большой заголовок */
+.shop-main-title {
+    font-size: 24px;
+    font-weight: 900;
+    color: #2c3e50;
+    margin: 0 0 10px 0;
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+/* Вертикальный список товаров */
+.shop-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-height: 280px;      /* Ограничиваем высоту (примерно на 3.5 товара) */
+    overflow-y: auto;       /* Включаем вертикальный скролл */
+    padding-right: 5px;     /* Отступ, чтобы скролл не прилипал к кнопкам */
+    box-sizing: border-box;
+}
+
+/* Красивое оформление полосы скролла для Telegram */
+.shop-list::-webkit-scrollbar {
+    width: 6px;
+}
+.shop-list::-webkit-scrollbar-track {
+    background: #f1f2f6;
+    border-radius: 10px;
+}
+.shop-list::-webkit-scrollbar-thumb {
+    background: #ced6e0;
+    border-radius: 10px;
+}
+.shop-list::-webkit-scrollbar-thumb:hover {
+    background: #a4b0be;
+}
+
+/* Строчка товара (Превью слева + Кнопка справа) */
+.shop-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    gap: 15px;
+}
+
+/* Маленькая копия карточки товара */
+.shop-item-preview {
+    width: 45px;
+    height: 45px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 16px;
+    color: white;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    flex-shrink: 0; /* Чтобы круг не сжимался */
+}
+
+/* Кнопка покупки товара справа */
+.shop-btn {
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: bold;
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    text-align: center;
+    flex-grow: 1; /* Кнопка занимает всё свободное место справа */
+}
+
+.shop-btn:hover { background-color: #27ae60; }
+.shop-btn:active { transform: scale(0.97); }
+.shop-btn:disabled { background-color: #95a5a6; cursor: not-allowed; }
+
+/* Десктопное поле */
+.container {
+    width: 600px;
+    height: 500px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    border: 2px dashed #ccc;
+    position: relative;
+    overflow: hidden;
+}
+
+.footer-panel { margin-top: 5px; }
+.reset-btn {
+    background: none; border: none; color: #7f8c8d; font-size: 13px; cursor: pointer;
+    transition: color 0.2s, transform 0.1s; padding: 5px 10px;
+}
+.reset-btn:hover { color: #c0392b; text-decoration: underline; }
+.reset-btn:active { transform: scale(0.98); }
+
+/* Десктопная карточка */
+.drag-item {
+    width: 80px;
+    height: 80px;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    cursor: pointer;
+    user-select: none;
+    position: absolute;
+    transition: background-color 0.2s, border 0.2s; 
+    border: 3px solid transparent;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+/* === АНИМАЦИИ === */
+.spawn-anim { animation: cardSpawn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+@keyframes cardSpawn {
+    0% { transform: scale(0); opacity: 0; }
+    70% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.click-anim { animation: cardClickEffect 0.15s ease-out; }
+@keyframes cardClickEffect {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.85); }
+    100% { transform: scale(1); }
+}
+
+.merge-pulse-anim { animation: cardMergePulse 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+@keyframes cardMergePulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+}
+
+.absorb-anim { animation: cardAbsorb 0.2s ease-in forwards; pointer-events: none; }
+@keyframes cardAbsorb {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(0); opacity: 0; }
+}
+
+.floating-text {
+    position: absolute;
+    font-size: 20px;
+    font-weight: bold;
+    color: #2ecc71;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    z-index: 100;
+    animation: floatUpAndFade 0.8s ease-out forwards;
+}
+
+.floating-text.passive {
+    font-size: 16px;
+    color: #f1c40f; 
+    animation: floatUpAndFadePassive 1.2s ease-out forwards;
+}
+
+@keyframes floatUpAndFade {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-50px); opacity: 0; }
+}
+
+@keyframes floatUpAndFadePassive {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-35px); opacity: 0; }
+}
+
+.drag-item.dragging { opacity: 0.9; cursor: grabbing; }
+.drag-item.hovered { border-color: #ff9800; transform: scale(1.08) !important; z-index: 10; }
+
+/* Палитра */
+.val-1    { background-color: #00e0f9; background-image: url(1.png);}
+.val-2    { background-color: #117da1; background-image: url(2.png); }
+.val-4    { background-color: #1d3557; background-image: url(4.png); }
+.val-8    { background-color: #a33b1e; background-image: url(8.png); }
+.val-16   { background-color: #f4a261; background-image: url(16.png); }
+.val-32   { background-color: #e76f51; background-image: url(32.png); }
+.val-64   { background-color: #2a9d8f; background-image: url(64.png); }
+.val-128  { background-color: #e9c46a; background-image: url(128.png); }
+.val-256  { background-color: #9b5de5; background-image: url(256.png); }
+.val-512  { background-color: #f15bb5; background-image: url(512.png); }
+.val-1024 { background-color: #00bbf9; background-image: url(1024.png); }
+.val-2048 { background-color: #00f5d4; background-image: url(2048.png); }
+.val-4096 { background-color: #435682; background-image: url(4096.png); }
+.val-8192 { background-color: #43825b; background-image: url(8192.png); }
+.val-16384 { background-color: #7d4382; background-image: url(16384.png); }
+.val-32768 { background-color: #65e00d; background-image: url(32768.png); }
+.val-65536 { background-color: #e3c011; background-image: url(65536.png); }
+.val-131072 { background-color: #111111; background-image: url(131072.png); }
+.val-high { background-color: #d62828; background-image: url(.png); }
+
+/* Общие правила для всех карточек, чтобы картинка идеально ложилась внутрь */
+.drag-item, .shop-item-preview, .drag-item-preview {
+    background-size: cover;       /* Растягивает картинку без искажений */
+    background-position: center;  /* Центрирует изображение */
+    background-repeat: no-repeat; /* Запрещает размножение картинки */
+    color: transparent !important; /*Прячет стандартный текст-цифру, чтобы он не мешал */
+    text-shadow: none !important; /* Убирает тень старого текста */
+    box-shadow: none;
+    filter: drop-shadow(0px 0px 5px rgba(0, 0, 0, 0.5));
+}
+
+/* === МОБИЛЬНАЯ АДАПТАЦИЯ === */
+@media (max-width: 620px) {
+    body {
+        padding: 10px;
+        box-sizing: border-box;
+    }
+
+    .game-wrapper {
+        width: 100%;
+        max-width: 360px;
+        height: 95vh;
+        justify-content: space-between;
+    }
+
+    .balance-board {
+        font-size: 20px;
+        padding: 8px 20px;
+    }
+
+    .pps-counter {
+        font-size: 14px;
+    }
+
+    .container {
+        width: 100%;
+        height: 65vh;
+        max-height: 440px;
+    }
+
+    .drag-item {
+        width: 65px;
+        height: 65px;
+        font-size: 20px;
+        border-radius: 8px;
+    }
+
+    .floating-text { font-size: 16px; }
+    .floating-text.passive { font-size: 13px; }
+}
+
+/* Скрываем секретные товары в магазине по умолчанию */
+.shop-item-row.locked {
+    display: none !important;
+}
+
+/* === СТИЛИ ДЛЯ ОКНА ПОЗДРАВЛЕНИЯ === */
+#unlock-popup {
+    opacity: 0;
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 24px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    width: 85%;
+    max-width: 320px;
+    box-sizing: border-box;
+    transform: translateY(30px) scale(0.9);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) allow-discrete;
+    border: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+
+    &:popover-open {
+        display: flex;
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Эффект размытия и затемнения для окна поздравления */
+#unlock-popup::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+@starting-style {
+    #unlock-popup:popover-open {
+        opacity: 0;
+        transform: translateY(30px) scale(0.9);
+    }
+}
+
+/* Переливающийся текст заголовка */
+.unlock-title.shiny-text {
+    font-size: 26px;
+    font-weight: 900;
+    /* Создаем градиент из золотого, фиолетового и неонового цветов */
+    background: linear-gradient(90deg, #ff9f43, #ff6b6b, #9b5de5, #ff9f43);
+    background-size: 300% auto; /* Раздуваем градиент по ширине, чтобы двигать его */
+    -webkit-background-clip: text; /* Вырезаем градиент строго по форме букв */
+    -webkit-text-fill-color: transparent; /* Делаем стандартный цвет букв прозрачным */
+    margin: 0 0 5px 0;
+    letter-spacing: 1px;
+    animation: textShineEffect 3s linear infinite; /* Бесконечный цикл перелива */
+}
+
+@keyframes textShineEffect {
+    0% { background-position: 0% center; }
+    100% { background-position: 300% center; } /* Сдвигаем градиент, имитируя бегущий блик */
+}
+
+
+.unlock-subtitle {
+    font-size: 15px;
+    color: #7f8c8d;
+    margin: 0 0 20px 0;
+}
+
+/* Статичное превью карточки внутри поповера */
+.drag-item-preview {
+    width: 90px;
+    height: 90px;
+    font-size: 28px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    margin-bottom: 20px;
+    animation: popupCardPulse 1.5s infinite ease-in-out; /* Карточка будет плавно покачиваться */
+}
+
+@keyframes popupCardPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+}
+
+/* Текст-предупреждение о магазине */
+.shop-alert {
+    font-size: 14px;
+    color: #27ae60;
+    font-weight: bold;
+    margin: 5px 0 20px 0;
+    line-height: 1.4;
+    animation: flashText 1s infinite alternate;
+}
+
+@keyframes flashText {
+    0% { opacity: 0.8; }
+    100% { opacity: 1; transform: scale(1.02); }
+}
+
+/* Кнопка закрытия поздравления */
+.unlock-close-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: bold;
+    background-color: #e67e22;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(230, 126, 34, 0.3);
+    transition: background-color 0.2s, transform 0.1s;
+}
+.unlock-close-btn:hover { background-color: #d35400; }
+.unlock-close-btn:active { transform: scale(0.97); }
+
+/* === СТИЛИ ДЛЯ ОКНА ОФФЛАЙН ДОХОДА === */
+#offline-popup {
+    opacity: 0;
+    background: #ffffff;
+    padding: 15px;
+    border-radius: 24px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    width: 85%;
+    max-width: 320px;
+    box-sizing: border-box;
+    transform: translateY(30px) scale(0.9);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) allow-discrete;
+    border: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+
+    & > h2 {
+        font-size: 20px;
+    }
+
+    &:popover-open {
+        display: flex;
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+#offline-popup::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+@starting-style {
+    #offline-popup:popover-open {
+        opacity: 0;
+        transform: translateY(30px) scale(0.9);
+    }
+}
+
+.offline-gold-icon {
+    font-size: 50px;
+    margin-bottom: 10px;
+    animation: bounceGold 2s infinite ease-in-out;
+}
+
+@keyframes bounceGold {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.offline-reward-text {
+    font-size: 15px;
+    color: #7f8c8d;
+    margin: 5px 0 0 0;
+}
+
+.offline-reward-value {
+    font-size: 32px;
+    color: #27ae60;
+    font-weight: 900;
+    margin: 5px 0 25px 0;
+}
+
+/* Стиль счётчика алмазов на верхней панели */
+.diamonds-counter {
+    font-size: 18px;
+    font-weight: bold;
+    color: #9b5de5; /* Алмазный фиолетовый оттенок */
+    margin: 2px 0;
+}
+
+/* Строчка награды алмазами в окне рекордов */
+.diamonds-reward-text {
+    font-size: 18px;
+    font-weight: bold;
+    color: #9b5de5;
+    margin: 5px 0 15px 0;
+    animation: pulseReward 1s infinite alternate;
+}
+
+@keyframes pulseReward {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.05); }
+}
+
+/* Ряд для кнопок вызова магазинов */
+.shop-anchors-row {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    width: 100%;
+}
+
+/* Новая фиолетовая кнопка улучшений */
+#upgrades-anchor {
+    font-size: 24px;
+    background: #ffffff;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.1s;
+    border: 2px solid #9b5de5; /* Фиолетовый ободок */
+    
+    &:active {
+        transform: scale(0.9);
+    }
+}
+
+/* Общие стили для поповера улучшений (копируют стиль обычного магазина) */
+#upgrades-shop {
+    opacity: 0;
+    gap: 15px;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 360px;
+    box-sizing: border-box;
+    transform: translateY(-20px);
+    transition: all 0.3s allow-discrete;
+    border: none;
+    flex-direction: column;
+
+    &:popover-open {
+        display: flex;
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#upgrades-shop::backdrop {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(3px);
+}
+
+@starting-style {
+    #upgrades-shop:popover-open {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+/* Блок текстовой инфы об улучшении (слева) */
+.upgrade-item-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    flex: 1;
+}
+
+.upgrade-name {
+    font-size: 15px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.upgrade-desc {
+    font-size: 12px;
+    color: #7f8c8d;
+}
+
+.upgrade-level {
+    font-size: 11px;
+    font-weight: bold;
+    color: #9b5de5;
+    background: #f1e7fe;
+    padding: 2px 6px;
+    border-radius: 6px;
+    margin-top: 2px;
+}
+
+/* Кнопка покупки улучшения (справа) */
+.upgrade-btn {
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: bold;
+    background-color: #9b5de5; /* Фиолетовая кнопка алмазов */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    text-align: center;
+    min-width: 80px;
+    box-shadow: 0 3px 6px rgba(155, 93, 229, 0.2);
+}
+
+.upgrade-btn:hover { background-color: #833ab4; }
+.upgrade-btn:active { transform: scale(0.95); }
+.upgrade-btn:disabled { background-color: #95a5a6; cursor: not-allowed; box-shadow: none; }
+
+/* Ряд для кнопок вызова магазинов и ТВ */
+.shop-anchors-row {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    width: 100%;
+    margin-top: 5px;
+}
+
+/* Новая синяя кнопка рекламы с анимацией появления */
+#ads-anchor {
+    font-size: 24px;
+    background: #ffffff;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.1s, background-color 0.2s, border-color 0.2s, color 0.2s;
+    border: 2px solid #3498db; /* Красивый синий ободок */
+    color: #3498db;
+    font-weight: bold;
+    animation: cardSpawn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; /* Упругая анимация появления */
+    
+    &:active {
+        transform: scale(0.9);
+    }
+}
+
+/* Стиль кнопки, когда реклама уходит на кулдаун */
+#ads-anchor.cooldown {
+    background-color: #e2e8f0;
+    border-color: #cbd5e1;
+    color: #64748b;
+    font-size: 13px; /* Текст '2:59' аккуратно поместится в круг */
+    cursor: not-allowed;
+    box-shadow: none;
+    pointer-events: none; /* Запрещаем клики во время перезарядки */
+    animation: none; /* Отключаем лишние анимации */
+}
+
+/* Стили конкретно для поповера выбора награды */
+#ads-choice-popup {
+    opacity: 0;
+    gap: 15px;
+    background: #ffffff;
+    padding: 15px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 360px;
+    box-sizing: border-box;
+    transform: translateY(-20px);
+    transition: all 0.3s allow-discrete;
+    border: none;
+    flex-direction: column;
+
+    & > h2 {
+        font-size: 22px;
+    }
+
+    &:popover-open {
+        display: flex;
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#ads-choice-popup::backdrop {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(3px);
+}
+
+@starting-style {
+    #ads-choice-popup:popover-open {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+/* === СТИЛИ ДЛЯ ПЕРЕКЛЮЧАТЕЛЯ ПОЛЕЙ === */
+.field-tabs-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: -14px; /* Слегка прижимаем к полю */
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 10px 5px;
+    font-size: 13px;
+    font-weight: bold;
+    background-color: #e2e8f0;
+    color: #475569;
+    border: 2px solid #cbd5e1;
+    border-bottom: none; /* Убираем нижнюю рамку, создавая эффект вкладки */
+    border-radius: 12px 12px 0 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+/* Активная (выбранная) вкладка */
+.tab-btn.active {
+    background-color: #ffffff;
+    color: #2c3e50;
+    border-color: #ccc;
+    border-bottom: 2px solid #ffffff; /* Перекрывает верхнюю рамку контейнера */
+    transform: translateY(3px); /* Опускаем чуть ниже для визуальной склейки с полем */
+    z-index: 2;
+}
+
+/* Заблокированная вкладка */
+.tab-btn.locked-tab {
+    background-color: #cbd5e1;
+    color: #94a3b8;
+    border-color: #cbd5e1;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.tab-range {
+    font-size: 10px;
+    font-weight: normal;
+    opacity: 0.8;
+}
+
+/* Мобильная адаптация вкладок */
+@media (max-width: 620px) {
+    .tab-btn {
+        font-size: 11px;
+        padding: 8px 2px;
+    }
+    .tab-range {
+        font-size: 9px;
+    }
+}
+
+/* Кнопка вызова коллекции слева от баланса */
+#collection-anchor {
+    font-size: 24px;
+    background: #ffffff;
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border: #e67e22 solid 3px; /* Красивый оранжевый ободок книжки */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.1s;
+    flex-shrink: 0; /* Чтобы кнопка не сжималась на узких экранах */
+    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.2);
+    text-shadow: 0px 0px 7px rgba(0, 0, 0, 0.5);
+}
+
+#collection-anchor:active {
+    transform: scale(0.9);
+}
+
+/* Специфический стиль для поповера коллекции */
+#collection-popup {
+    opacity: 0;
+    gap: 15px;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 360px;
+    box-sizing: border-box;
+    transform: translateY(-20px);
+    transition: all 0.3s allow-discrete;
+    border: none;
+    flex-direction: column;
+}
+
+#collection-popup:popover-open {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#collection-popup::backdrop {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(3px);
+}
+
+@starting-style {
+    #collection-popup:popover-open {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+/* Сетка коллекции 3хN */
+.collection-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Ровно 3 колонки */
+    gap: 12px;
+    width: 100%;
+    max-height: 380px; /* Высота скролла, чтобы влезало много строк */
+    overflow-y: auto;
+    padding-right: 5px;
+    box-sizing: border-box;
+}
+
+/* Красивое оформление полосы скролла для коллекции */
+.collection-grid::-webkit-scrollbar { width: 6px; }
+.collection-grid::-webkit-scrollbar-track { background: #f1f2f6; border-radius: 10px; }
+.collection-grid::-webkit-scrollbar-thumb { background: #ced6e0; border-radius: 10px; }
+
+/* Слот отдельной карточки в альбоме */
+.collection-slot {
+    aspect-ratio: 1 / 1; /* Делает слот идеально квадратным */
+    border-radius: 10px;
+    /* background-color: #f1f2f6; */
+    border: 2px solid #e2e8f0;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: transform 0.1s, border-color 0.2s;
+}
+
+.collection-slot:active {
+    transform: scale(0.95);
+}
+
+/* Если карточка ЕЩЕ НЕ ОТКРЫТА (заблокирована) */
+.collection-slot.locked-card {
+    background-image: none !important; /* Убираем картинку, если она прописана в val-X */
+    background-color: #cbd5e1 !important;
+    border-color: #94a3b8;
+    cursor: not-allowed;
+}
+
+/* Знак вопроса внутри закрытой карты */
+.collection-slot.locked-card::after {
+    content: "?";
+    font-size: 28px;
+    font-weight: bold;
+    color: #64748b;
+}
+
+/* Финальный стиль для окна детального просмотра */
+#card-details-popup {
+    opacity: 0;
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 24px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    width: 85%;
+    max-width: 320px;
+    box-sizing: border-box;
+    transform: translateY(-50px);
+    transition: all 0.3s allow-discrete;
+    border: solid 2px #00bbf9;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin: auto; /* <-- КРИТИЧЕСКИ ВАЖНО: центрирует окно намертво поверх альбома */
+}
+
+#card-details-popup:popover-open {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#card-details-popup::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+@starting-style {
+    #card-details-popup:popover-open {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+}
+
+/* Красивый подзаголовок разделения этапов внутри коллекции */
+.collection-stage-title {
+    grid-column: span 3; /* Растягиваем заголовок на все 3 колонки ширины */
+    font-size: 11px;
+    font-weight: 800;
+    color: #94a3b8; /* Спокойный серо-синий цвет */
+    letter-spacing: 1.5px;
+    text-align: center;
+    margin: 15px 0 5px 0;
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #e2e8f0; /* Пунктирная линия снизу */
+}
+
+/* Убираем верхний отступ у самого первого заголовка, чтобы не прилипал к шапке */
+.collection-grid .collection-stage-title:first-child { margin-top: 5px; }
+
+/* Специальный сочный стиль для всплывающего текста КРИТИЧЕСКОГО клика */
+.floating-text.crit-text {
+    color: #ff3333 !important; /* Насыщенный красный */
+    font-size: 16px; /* Крупнее обычного */
+    font-weight: 900;
+    text-shadow: 0 0 8px rgba(255, 51, 51, 0.6), 2px 2px 3px rgba(0, 0, 0, 0.5);
+    animation: floatUpAndFade 1.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; /* Чуть быстрее улетает вверх */
+}
+
+/* Золотой индикатор активного х2 буста */
+.double-income-timer {
+    font-size: 13px;
+    font-weight: 800;
+    color: #f39c12;
+    background: #fef9e7;
+    padding: 2px 10px;
+    border-radius: 12px;
+    border: 1px dashed #f1c40f;
+    margin-top: 2px;
+    display: inline-block;
+    animation: pulseGoldTimer 1.5s infinite alternate;
+}
+
+@keyframes pulseGoldTimer {
+    0% { transform: scale(1); opacity: 0.9; }
+    100% { transform: scale(1.03); opacity: 1; }
+}
+
+/* ПОЛНОСТЬЮ ОБНОВЛЕННЫЙ СТИЛЬ ШИРОКОЙ КНОПКИ-ПОЛОСЫ */
+#leaderboard-anchor {
+    position: absolute;
+    top: 99px;
+    left: 30%;
+    width: 40%;
+    max-width: 600px; /* Идеально совпадает с шириной игрового поля */
+    padding: 5px;    /* Делаем кнопку сочной и удобной для тапа */
+    font-size: 12px;
+    font-weight: 600;
+    color: #ffffff; /* Белый текст */
+    /* Красивый золотисто-оранжевый градиент */
+    background: linear-gradient(135deg, #f1c40f, #e67e22);
+    border: none !important;
+    border-radius: 14px; /* Убираем 50% круга, делаем мягкие прямоугольные углы */
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(230, 126, 34, 0.15);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.1s, box-shadow 0.1s;
+    /* Сбрасываем старые ограничения круглой кнопки */
+    box-sizing: border-box;
+}
+
+#leaderboard-anchor:hover {
+    background: linear-gradient(135deg, #f39c12, #d35400) !important;
+}
+
+#leaderboard-anchor:active {
+    transform: scale(0.98); /* Упругое сжатие всей полосы при клике */
+    box-shadow: 0 2px 5px rgba(230, 126, 34, 0.1);
+}
+
+/* === ОБНОВЛЕННЫЙ СТИЛЬ ОКНА РЕЙТИНГА С АНИМАЦИЕЙ ВЫЛЕТА === */
+#leaderboard-popup {
+    opacity: 0;
+    gap: 15px;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 24px; /* Мягкие закругленные углы */
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 360px; /* Идеальный мобильный размер */
+    box-sizing: border-box;
+    border: none;
+    flex-direction: column;
+    align-items: center;
+    
+    /* Эффект вылета: изначально окно смещено вниз на 40px и уменьшено */
+    transform: translateY(40px) scale(0.92);
+    transition: opacity 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.2), transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.2), display 0.3s allow-discrete;
+}
+
+/* Эффект, когда окно рейтинга открывается */
+#leaderboard-popup:popover-open {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0) scale(1); /* Возвращается в центр экрана и нормальный размер */
+}
+
+/* Плавное размытие фона за окном */
+#leaderboard-popup::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity 0.3s ease, display 0.3s allow-discrete;
+}
+
+#leaderboard-popup:popover-open::backdrop {
+    opacity: 1;
+}
+
+/* Начальное состояние анимации для браузера */
+@starting-style {
+    #leaderboard-popup:popover-open {
+        opacity: 0;
+        transform: translateY(40px) scale(0.92);
+    }
+    #leaderboard-popup:popover-open::backdrop {
+        opacity: 0;
+    }
+}
+
+/* === ВНУТРЕННИЕ СТИЛИ СПИСКА (Оставляем чистыми и аккуратными) === */
+.leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-height: 280px;
+    overflow-y: auto;
+    padding-right: 5px;
+    box-sizing: border-box;
+}
+
+/* Полоса прокрутки для топа */
+.leaderboard-list::-webkit-scrollbar { width: 6px; }
+.leaderboard-list::-webkit-scrollbar-track { background: #f1f2f6; border-radius: 10px; }
+.leaderboard-list::-webkit-scrollbar-thumb { background: #ced6e0; border-radius: 10px; }
+
+.leaderboard-row {
+    display: flex;
+    align-items: center;
+    background: #f8f9fa;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    font-size: 13px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.leader-place {
+    font-size: 16px;
+    font-weight: bold;
+    width: 30px;
+    flex-shrink: 0;
+}
+
+.leader-name {
+    font-weight: 600;
+    color: #2c3e50;
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.leader-score {
+    font-weight: 600;
+    color: #27ae60;
+}
+
+.leaderboard-row.user-row {
+    background: #fff9e7;
+    border-color: #f1c40f;
+    box-shadow: 0 2px 6px rgba(241, 196, 15, 0.15);
+}
+
+/* === СТИЛИ ДЛЯ КНОПОК ОФФЛАЙН ДОХОДА === */
+
+/* Контейнер для размещения кнопок в один ряд */
+.offline-btns-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    margin-top: 5px;
+    box-sizing: border-box;
+}
+
+/* Общий базовый стиль для обеих кнопок */
+.offline-claim-btn, .offline-double-btn {
+    flex: 1; /* Кнопки делят пространство ровно пополам */
+    padding: 14px 10px;
+    font-size: 13px;
+    font-weight: 900;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+    box-sizing: border-box;
+    white-space: nowrap;
+}
+
+/* Стиль обычной серой кнопки */
+.offline-claim-btn {
+    background-color: #95a5a6;
+    color: white;
+    box-shadow: 0 4px 10px rgba(149, 165, 166, 0.2);
+    font-size: 10px;
+
+    &:hover { background-color: #7f8c8d; }
+    &:active { transform: scale(0.96); }
+}
+
+/* Стиль премиальной золотой кнопки удвоения */
+.offline-double-btn {
+    background: linear-gradient(135deg, #f1c40f, #e67e22);
+    color: white;
+    box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);
+    border: 1px solid #d35400;
+
+    &:hover { background: linear-gradient(135deg, #f39c12, #d35400); }
+    &:active { transform: scale(0.96); }
+}
+
+/* Небольшая адаптация для мобильных, чтобы текст не вылезал */
+@media (max-width: 620px) {
+    .offline-claim-btn, .offline-double-btn {
+        font-size: 11px;
+        padding: 12px 5px;
+    }
+}
+
+/* === СТИЛИ ДЛЯ СЕКРЕТНОЙ КАРТОЧКИ === */
+
+/* Уникальный класс для секретной карты на поле */
+.drag-item.secret-card {
+    background-color: #111111 !important; /* Глубокий черный цвет */
+    background-image: none !important;    /* Отменяем любые картинки */
+    border: 2px solid #9b59b6 !important;  /* Фиолетовая рамка */
+    color: #ffffff !important;             /* Белый цвет знака вопроса */
+    font-size: 32px !important;
+    font-weight: 900 !important;
+    text-shadow: 0 0 10px #fff;
+    /* Мощное неоновое свечение вокруг карты */
+    box-shadow: 0 0 15px rgba(155, 89, 182, 0.6), inset 0 0 10px rgba(155, 89, 182, 0.4) !important;
+    animation: neonPulseSecret 1s infinite alternate !important;
+    cursor: pointer;
+}
+
+/* Пульсация неонового свечения секретной карты */
+@keyframes neonPulseSecret {
+    0% {
+        box-shadow: 0 0 10px rgba(155, 89, 182, 0.5), inset 0 0 5px rgba(155, 89, 182, 0.3);
+        transform: scale(0.97);
+    }
+    100% {
+        box-shadow: 0 0 22px rgba(155, 89, 182, 0.9), inset 0 0 12px rgba(155, 89, 182, 0.6);
+        transform: scale(1.07); /* Карта слегка «дышит» на поле */
+    }
+}
+
+/* Большой знак вопроса в поповере кейса */
+.secret-box-visual {
+    width: 70px;
+    height: 70px;
+    background: #111111;
+    border: 3px solid #9b59b6;
+    border-radius: 16px;
+    color: #fff;
+    font-size: 38px;
+    font-weight: 900;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 20px rgba(155, 89, 182, 0.5);
+    text-shadow: 0 0 8px #fff;
+    margin: 10px auto;
+    animation: floatSecretBox 2s infinite ease-in-out;
+}
+
+@keyframes floatSecretBox {
+    0% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-8px) rotate(5deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
+}
+
+/* Настройка анимации открытия для поповера секретной карты */
+#secret-card-popup {
+    opacity: 0;
+    gap: 15px;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 24px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 340px;
+    box-sizing: border-box;
+    border: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transform: translateY(40px) scale(0.92);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.2) allow-discrete;
+}
+
+#secret-card-popup:popover-open {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+#secret-card-popup::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+@starting-style {
+    #secret-card-popup:popover-open {
+        opacity: 0;
+        transform: translateY(40px) scale(0.92);
+    }
+}
+
+/* === СТИЛИ ДЛЯ ИНТЕРФЕЙСА КОЛЕСА ФОРТУНЫ === */
+
+/* Фирменный стиль для новой кнопки Колеса Фортуны в нижнем баре */
+#wheel-anchor {
+    font-size: 24px;
+    background: #ffffff;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    border: #e67e22 solid 2px; /* Сочный оранжевый ободок под стиль рулетки */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.1s;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    padding: 0;
+}
+
+#wheel-anchor:active {
+    transform: scale(0.9);
+}
+
+/* Настройка поповера рулетки */
+#fortune-wheel-popup {
+    opacity: 0;
+    gap: 12px;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 24px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 340px;
+    box-sizing: border-box;
+    border: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transform: translateY(40px) scale(0.92);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.2) allow-discrete;
+}
+
+#fortune-wheel-popup:popover-open {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+#fortune-wheel-popup::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+@starting-style {
+    #fortune-wheel-popup:popover-open {
+        opacity: 0;
+        transform: translateY(40px) scale(0.92);
+    }
+}
+
+/* Индикатор зарядов рулетки */
+.wheel-energy-bar {
+    font-size: 14px;
+    font-weight: 800;
+    color: #2c3e50;
+    background: #d8dce1;
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+/* Текст тикающего таймера */
+.wheel-cooldown-text {
+    font-size: 11px;
+    font-weight: bold;
+    color: #e67e22;
+    background: #fff5eb;
+    padding: 3px 10px;
+    border-radius: 10px;
+    margin-top: -4px;
+}
+
+/* Обертка для позиционирования стрелочки над колесом */
+.wheel-outer-wrapper {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    margin: 15px 0 5px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Стрелочка-указатель сверху по центру колеса */
+.wheel-pointer {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+    color: #ff4757; /* Яркий красный указатель */
+    z-index: 10;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Круглый барабан рулетки с коническим градиентом на 6 секторов */
+.fortune-wheel-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 6px solid #2c3e50;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15), inset 0 0 15px rgba(0,0,0,0.2);
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+    /* Чередуем 6 сочных цветов по 60 градусов каждый (360 / 6 = 60) */
+    background: conic-gradient(
+        #ff7675 0deg 60deg,
+        #74b9ff 60deg 120deg,
+        #55efc4 120deg 180deg,
+        #ffeaa7 180deg 240deg,
+        #a29bfe 240deg 300deg,
+        #fd79a8 300deg 360deg
+    );
+    /* Плавный переход для вращения через JS */
+    transition: transform 7s cubic-bezier(0.1, 0.8, 0.1, 1);
+}
+
+/* Монолитный стиль: плашка занимает всё колесо, вращаясь строго вокруг его центра */
+.wheel-sector-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform-origin: 50% 50%; 
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center; /* Центрируем цифру строго по горизонтали */
+    align-items: flex-start; /* Прижимаем к верхнему краю сектора */
+    padding-top: 10px;       /* Отступ от внешнего ободка */
+    font-size: 22px;
+    font-weight: 900;
+    color: #ffffff;       
+    text-shadow: 2px 2px 0px #2c3e50, -1px -1px 0px #2c3e50; 
+    user-select: none;
+    z-index: 2;
+}
+
+/* Центрирующая золотая заглушка-болт посередине колеса */
+.fortune-wheel-circle::after {
+    content: "⚙️";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    background: #f1c40f;
+    border: 3px solid #2c3e50;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    z-index: 5;
+}

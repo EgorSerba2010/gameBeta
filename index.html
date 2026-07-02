@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>2048 Кликер-Стратегия</title>
+    <script src="https://telegram.org"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="game-wrapper">
+        <!-- Верхняя панель управления -->
+        <div class="top-bar">
+            <!-- НОВАЯ КНОПКА КОЛЛЕКЦИИ СЛЕВА -->
+            <button id="collection-anchor" popovertarget="collection-popup" title="Моя коллекция">📖</button>
+
+            <!-- Левая часть: только баланс денег и пассивный доход -->
+            <div class="balance-board">
+                <div class="balance-text">Баланс: <span id="balance-value">100</span></div>
+                <div class="pps-counter">Доход: +<span id="pps-value">0</span> $/сек</div>
+            </div>
+            
+            <!-- Правая часть: колонка с алмазами сверху и часами снизу -->
+            <div class="right-bar-column">
+                <div class="diamonds-counter" title="Ваши алмазы">💎 <span id="diamonds-value">0</span></div>
+                <div class="timer-container" title="До появления новой карточки">
+                    <svg class="progress-ring" width="50" height="50">
+                        <circle class="progress-ring__background" stroke="#e0e0e0" stroke-width="4" fill="transparent" r="20" cx="25" cy="25"/>
+                        <circle class="progress-ring__circle" id="timer-ring" stroke="#4a90e2" stroke-width="4" fill="transparent" r="20" cx="25" cy="25"/>
+                    </svg>
+                    <span class="timer-icon">⏳</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- НОВАЯ КНОПКА РЕЙТИНГА МЕЖДУ БАЛАНСОМ И ПОЛЕМ -->
+        <div class="leaderboard-container-row">
+            <button id="leaderboard-anchor" popovertarget="leaderboard-popup">
+                🏆 Лидерборд
+            </button>
+        </div>
+        
+        <!-- Переключатель игровых полей (вкладок) -->
+        <div class="field-tabs-row">
+            <button id="tab-field-1" class="tab-btn active" onclick="switchField(1)">Поле 1</button>
+            <button id="tab-field-2" class="tab-btn locked-tab" onclick="switchField(2)" disabled>🔒 Поле 2</button>
+            <button id="tab-field-3" class="tab-btn locked-tab" onclick="switchField(3)" disabled>🔒 Поле 3</button>
+        </div>
+
+        <!-- Игровое поле -->
+        <div id="sandbox" class="container"></div>
+        
+        <!-- Кнопки управления магазинами и рекламой -->
+        <div class="shop-anchors-row">
+            <button id="anchor" popovertarget="shop" title="Магазин карточек">🛒</button>
+            <button id="upgrades-anchor" popovertarget="upgrades-shop" title="Улучшения">💎</button>
+            <button id="ads-anchor" popovertarget="ads-choice-popup" title="Посмотреть рекламу">📺</button>
+            <button id="wheel-anchor" popovertarget="fortune-wheel-popup" title="Колесо Фортуны">🎡</button>
+        </div>
+
+        <!-- НОВОЕ ОКНО ВЫБОРА НАГРАДЫ ЗА РЕКЛАМУ (ПОПОВЕР) -->
+        <div class="shop-container" id="ads-choice-popup" popover>
+            <h2 class="shop-main-title">НАГРАДА ЗА ТВ</h2>
+            <p class="unlock-subtitle" style="margin-bottom: 15px;">Выберите бонус за просмотр ролика:</p>
+            
+            <div class="shop-list" style="max-height: none; overflow: visible;">
+                <!-- Опция 1: Алмаз -->
+                <div class="shop-item-row">
+                    <div class="upgrade-item-info">
+                        <span class="upgrade-name">Премиум бонус</span>
+                        <span class="upgrade-desc">Получить ценную валюту</span>
+                    </div>
+                    <button class="upgrade-btn" onclick="startRewardedAd('diamond')" style="min-width: 90px;">
+                        +1 💎
+                    </button>
+                </div>
+                
+                <!-- Опция 2: 15 минут денег -->
+                <div class="shop-item-row">
+                    <div class="upgrade-item-info">
+                        <span class="upgrade-name">Быстрый капитал</span>
+                        <span class="upgrade-desc">Деньги за 15 мин. игры</span>
+                    </div>
+                    <button class="upgrade-btn" onclick="startRewardedAd('money')" style="background-color: #2ecc71; box-shadow: 0 3px 6px rgba(46,204,113,0.2); min-width: 90px;">
+                        +15м 💰
+                    </button>
+                </div>
+
+                <!-- Опция 3: Удвоение дохода на 2 часа -->
+                <div class="shop-item-row">
+                    <div class="upgrade-item-info">
+                        <span class="upgrade-name">Золотой Век</span>
+                        <span class="upgrade-desc">х2 весь доход на 2 часа</span>
+                    </div>
+                    <button class="upgrade-btn" onclick="startRewardedAd('double')" style="background: linear-gradient(135deg, #f1c40f, #f39c12); color: #fff; box-shadow: 0 3px 6px rgba(241,196,15,0.3); min-width: 90px;">
+                        +2ч ⚡
+                    </button>
+                </div>
+
+            </div>
+        </div>
+        
+        <!-- Поповер-меню обычного магазина -->
+        <div class="shop-container" id="shop" popover>
+            <h2 class="shop-main-title">МАГАЗИН</h2>
+            <div class="shop-list">
+                <div class="shop-item-row" id="shop-row-1">
+                    <div class="shop-item-preview val-1">1</div>
+                    <button class="shop-btn" id="buy-1-btn" onclick="buyCard(1)">Купить за <span id="price-1">10</span> $</button>
+                </div>
+                <div class="shop-item-row" id="shop-row-2">
+                    <div class="shop-item-preview val-2">2</div>
+                    <button class="shop-btn" id="buy-2-btn" onclick="buyCard(2)">Купить за <span id="price-2">50</span> $</button>
+                </div>
+                <div class="shop-item-row" id="shop-row-4">
+                    <div class="shop-item-preview val-4">4</div>
+                    <button class="shop-btn" id="buy-4-btn" onclick="buyCard(4)">Купить за <span id="price-4">200</span> $</button>
+                </div>
+                <div class="shop-item-row locked" id="shop-row-8">
+                    <div class="shop-item-preview val-8">8</div>
+                    <button class="shop-btn" id="buy-8-btn" onclick="buyCard(8)">Купить за <span id="price-8">1000</span> $</button>
+                </div>
+                <div class="shop-item-row locked" id="shop-row-16">
+                    <div class="shop-item-preview val-16">16</div>
+                    <button class="shop-btn" id="buy-16-btn" onclick="buyCard(16)">Купить за <span id="price-16">5000</span> $</button>
+                </div>
+                <div class="shop-item-row locked" id="shop-row-32">
+                    <div class="shop-item-preview val-32">32</div>
+                    <button class="shop-btn" id="buy-32-btn" onclick="buyCard(32)">Купить за <span id="price-32">20000</span> $</button>
+                </div>
+                <div class="shop-item-row locked" id="shop-row-64">
+                    <div class="shop-item-preview val-64">64</div>
+                    <button class="shop-btn" id="buy-64-btn" onclick="buyCard(64)">Купить за <span id="price-64">100000</span> $</button>
+                </div>
+                <div class="shop-item-row locked" id="shop-row-128">
+                    <div class="shop-item-preview val-128">128</div>
+                    <button class="shop-btn" id="buy-128-btn" onclick="buyCard(128)">Купить за <span id="price-128">500000</span> $</button>
+                </div>
+                <div class="shop-item-row locked" id="shop-row-256">
+                    <div class="shop-item-preview val-256">256</div>
+                    <button class="shop-btn" id="buy-256-btn" onclick="buyCard(256)">Купить за <span id="price-256">2000000</span> $</button>
+                </div>
+                <div class="shop-item-row locked" id="shop-row-512">
+                    <div class="shop-item-preview val-512">512</div>
+                    <button class="shop-btn" id="buy-512-btn" onclick="buyCard(512)">Купить за <span id="price-512">10000000</span> $</button>
+                </div>
+                <div class="shop-item-row locked" id="shop-row-1024">
+                    <div class="shop-item-preview val-512">1024</div>
+                    <button class="shop-btn" id="buy-1024-btn" onclick="buyCard(1024)">Купить за <span id="price-1024">10000000</span> $</button>
+                </div>
+                <div class="shop-item-row locked" id="shop-row-2048">
+                    <div class="shop-item-preview val-2048">2048</div>
+                    <button class="shop-btn" id="buy-2048-btn" onclick="buyCard(2048)">Купить за <span id="price-2048">10000000</span> $</button>
+                </div>
+                <div class="shop-item-row locked" id="shop-row-4096">
+                    <div class="shop-item-preview val-4096">4096</div>
+                    <button class="shop-btn" id="buy-4096-btn" onclick="buyCard(4096)">Купить за <span id="price-4096">10000000</span> $</button>
+                </div>
+                <div class="shop-item-row locked" id="shop-row-8192">
+                    <div class="shop-item-preview val-8192">8192</div>
+                    <button class="shop-btn" id="buy-8192-btn" onclick="buyCard(8192)">Купить за <span id="price-8192">10000000</span> $</button>
+                </div>
+                <div class="shop-item-row locked" id="shop-row-16384">
+                    <div class="shop-item-preview val-16384">16384</div>
+                    <button class="shop-btn" id="buy-16384-btn" onclick="buyCard(16384)">Купить за <span id="price-16384">10000000</span> $</button>
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- Поповер-меню улучшений за алмазы -->
+        <div class="shop-container" id="upgrades-shop" popover>
+            <h2 class="shop-main-title">УЛУЧШЕНИЯ</h2>
+                <div class="shop-list">
+                <!-- Буст 1: Оффлайн таймер -->
+                <div class="shop-item-row">
+                    <div class="upgrade-item-info">
+                        <span class="upgrade-name">Сон инвестора</span>
+                        <span class="upgrade-desc">Макс. оффлайн время: +30 мин</span>
+                        <span class="upgrade-level">Ур. <span id="boost-offline-lvl">0</span></span>
+                    </div>
+                    <button class="upgrade-btn" id="buy-boost-offline-btn" onclick="buyUpgrade('offline')">
+                        <span id="price-boost-offline">2</span> 💎
+                    </button>
+                </div>
+
+                <!-- Буст 2: Повышение уровня спавна -->
+                <div class="shop-item-row">
+                    <div class="upgrade-item-info">
+                        <span class="upgrade-name">Эволюция спавна</span>
+                        <span class="upgrade-desc">Уровень появляющихся карт: х2</span>
+                        <span class="upgrade-level">Ур. <span id="boost-tier-lvl">0</span></span>
+                    </div>
+                    <button class="upgrade-btn" id="buy-boost-tier-btn" onclick="buyUpgrade('tier')">
+                        <span id="price-boost-tier">5</span> 💎
+                    </button>
+                </div>
+
+                <!-- НОВЫЙ БУСТ 3: Ускорение таймера спавна -->
+                <div class="shop-item-row">
+                    <div class="upgrade-item-info">
+                        <span class="upgrade-name">Конвейер карт</span>
+                        <span class="upgrade-desc">Интервал спавна: -1 сек</span>
+                        <span class="upgrade-level">Ур. <span id="boost-speed-lvl">0</span></span>
+                    </div>
+                    <button class="upgrade-btn" id="buy-boost-speed-btn" onclick="buyUpgrade('speed')">
+                        <span id="price-boost-speed">1</span> 💎
+                    </button>
+                </div>
+
+                <!-- Буст 4: Вероятность критического клика -->
+                <div class="shop-item-row">
+                    <div class="upgrade-item-info">
+                        <span class="upgrade-name">Критический удар</span>
+                        <span class="upgrade-desc">Шанс получить х10 при клике: +5%</span>
+                        <span class="upgrade-level">Ур. <span id="boost-crit-lvl">0</span></span>
+                    </div>
+                    <button class="upgrade-btn" id="buy-boost-crit-btn" onclick="buyUpgrade('crit')">
+                        <span id="price-boost-crit">1</span> 💎
+                    </button>
+                </div>
+
+                <!-- Буст 5: Ускорение сбора автодохода -->
+                <div class="shop-item-row">
+                    <div class="upgrade-item-info">
+                        <span class="upgrade-name">Быстрые транзакции</span>
+                        <span class="upgrade-desc">Сбор автодохода: -0.5 сек</span>
+                        <span class="upgrade-level">Ур. <span id="boost-income-speed-lvl">0</span></span>
+                    </div>
+                    <button class="upgrade-btn" id="buy-boost-income-speed-btn" onclick="buyUpgrade('autoIncomeSpeed')">
+                        <span id="price-boost-income-speed">2</span> 💎
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ВЕРНУЛИ: ОКНО ПОЗДРАВЛЕНИЯ (ПОПОВЕР) -->
+        <div class="unlock-popup-container" id="unlock-popup" popover>
+            <h2 class="unlock-title shiny-text">ПОЗДРАВЛЯЕМ!</h2>
+            <p class="unlock-subtitle">Вы открыли новую карточку:</p>
+            
+            <div id="unlocked-card-display" class="drag-item-preview"></div>
+            
+            <!-- Посадочное место для начисления алмазов -->
+            <p class="diamonds-reward-text" id="diamonds-reward-text">Награда: 💎 <span id="diamonds-reward-value">0</span></p>
+            
+            <p id="shop-alert-text" class="shop-alert"></p>
+            
+            <button class="unlock-close-btn" onclick="document.getElementById('unlock-popup').hidePopover()">ОТЛИЧНО!</button>
+        </div>
+
+        <!-- Обновленное окно оффлайн дохода (ПОПОВЕР) -->
+        <div class="unlock-popup-container" id="offline-popup" popover>
+            <h2 class="unlock-title shiny-text">С ВОЗВРАЩЕНИЕМ!</h2>
+            <p class="unlock-subtitle" id="offline-time-text">Вас не было в игре: 0 сек</p>
+            <div class="offline-gold-icon">💰</div>
+            <p class="offline-reward-text">Вы заработали пассивно:</p>
+            <h3 class="offline-reward-value">+<span id="offline-reward-value">0</span> $</h3>
+            
+            <!-- НОВЫЙ РЯД КНОПОК ДЛЯ ВЫБОРА НАГРАДЫ -->
+            <div class="offline-btns-row">
+                <!-- Яркая золотая кнопка удвоения за просмотр рекламы -->
+                <button class="offline-double-btn" onclick="claimDoubleOfflineReward()">📺 УДВОИТЬ!</button>
+                <!-- Скромная серая кнопка просто забрать базовую сумму -->
+                <button class="offline-claim-btn" onclick="claimNormalOfflineReward()">ПРОСТО ЗАБРАТЬ</button>
+            </div>
+        </div>
+
+        <!-- ОКНО КОЛЛЕКЦИИ (ПОПОВЕР) -->
+        <div class="shop-container" id="collection-popup" popover>
+            <h2 class="shop-main-title">МОЯ КОЛЛЕКЦИЯ</h2>
+            <!-- Сетка 3хN -->
+            <div class="collection-grid" id="collection-grid-container"></div>
+
+            <!-- ВСТАВЛЯЕМ ВНУТРЕННЕЕ ОКНО КАРТОЧКИ СЮДА (ВНУТРЬ АЛЬБОМА) -->
+            <div class="shop-container" id="card-details-popup" popover>
+                <h2 class="shop-main-title" id="details-card-name">НАЗВАНИЕ КАРТЫ</h2>
+                <p class="unlock-subtitle" id="details-card-value">Номинал: 0</p>
+                
+                <!-- Большое превью картинки карточки -->
+                <div id="details-card-image" class="drag-item-preview"></div>
+                
+                <!-- Твоё уникальное описание из базы данных -->
+                <p id="details-card-desc" style="font-size: 14px; color: #555; margin: 10px 0 25px 0; line-height: 1.5; padding: 0 10px;"></p>
+                
+                <button class="unlock-close-btn" onclick="document.getElementById('card-details-popup').hidePopover()" style="background-color: #3498db; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);">ЗАКРЫТЬ</button>
+            </div>
+        </div>
+
+        <!-- ОКНО ТАБЛИЦЫ ЛИДЕРОВ (ПОПОВЕР) -->
+        <div class="shop-container" id="leaderboard-popup" popover>
+            <h2 class="shop-main-title">ТОП ФАБРИКАНТОВ</h2>
+            <p class="unlock-subtitle" style="margin-bottom: 15px;">Лучшие игроки по балансу денег:</p>
+            
+            <!-- Сюда JavaScript будет вставлять строки лидеров -->
+            <div class="leaderboard-list" id="leaderboard-list-container">
+                <!-- Тестовые заглушки, пока нет сервера -->
+                <div class="leaderboard-row user-row">
+                    <span class="leader-place">🥇</span>
+                    <span class="leader-name">Вы (Загрузка...)</span>
+                    <span class="leader-score">100 $</span>
+                </div>
+            </div>
+            
+            <button class="unlock-close-btn" onclick="document.getElementById('leaderboard-popup').hidePopover()" style="margin-top: 15px; background-color: #95a5a6; box-shadow: 0 4px 10px rgba(149, 165, 166, 0.3);">ЗАКРЫТЬ</button>
+        </div>
+
+        <!-- ОКНО СЕКРЕТНОЙ КАРТЫ (ПОПОВЕР) -->
+        <div class="shop-container" id="secret-card-popup" popover>
+            <h2 class="shop-main-title" style="color: #9b59b6; text-shadow: 0 0 10px rgba(155, 89, 182, 0.3);">ТЕНЕВОЙ КЕЙС</h2>
+            <p class="unlock-subtitle" style="margin-bottom: 15px;">Узнай, что скрывается внутри!</p>
+            
+            <!-- Анимированная иконка кейса -->
+            <div class="secret-box-visual">?</div>
+            
+            <p style="font-size: 13px; color: #555; margin: 10px 0 20px 0; line-height: 1.5; padding: 0 10px;">
+                Отсюда были убраны все слабые карты. Внутри спрятан один из 5 твоих самых топовых открытых персонажей.
+            </p>
+            
+            <!-- Две кнопки в один ряд -->
+            <div class="offline-btns-row">
+                <button class="offline-claim-btn" onclick="document.getElementById('secret-card-popup').hidePopover()">ПРОПУСТИТЬ</button>
+                <button class="offline-double-btn" onclick="claimSecretCardReward()" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); border-color: #713391; box-shadow: 0 4px 12px rgba(142, 68, 173, 0.3);">
+                    📺 ВСКРЫТЬ!
+                </button>
+            </div>
+        </div>
+
+                <!-- ОКНО КОЛЕСА ФОРТУНЫ (ПОПОВЕР) -->
+        <div class="shop-container" id="fortune-wheel-popup" popover>
+            <h2 class="shop-main-title" style="color: #e67e22; text-shadow: 0 0 10px rgba(230, 126, 34, 0.2);">КОЛЕСО УДАЧИ</h2>
+            
+            <!-- Индикатор энергии / зарядов -->
+            <div class="wheel-energy-bar">
+                Заряды: <span id="wheel-energy-spans">🔋 3 / 3</span>
+            </div>
+            
+            <!-- Таймер до восстановления следующего заряда -->
+            <div id="wheel-timer-text" class="wheel-cooldown-text" style="display: none;">
+                Следующий через: 04:59
+            </div>
+            
+            <!-- Будущее круглое колесо (пока пустой макет для структуры) -->
+            <div class="wheel-outer-wrapper">
+                <div class="wheel-pointer">▼</div> <!-- Стрелочка-указатель верха -->
+                <div id="fortune-wheel-canvas" class="fortune-wheel-circle">
+                    <!-- Сектора добавятся через JS на следующем этапе -->
+                </div>
+            </div>
+
+            <!-- Экран выигрыша -->
+            <div id="wheel-screen-display" class="roulette-screen" style="margin-top: 15px;">???</div>
+            
+            <!-- Ряд кнопок управления -->
+            <div class="offline-btns-row">
+                <button class="offline-claim-btn" onclick="document.getElementById('fortune-wheel-popup').hidePopover()">ЗАКРЫТЬ</button>
+                <button id="spin-wheel-btn" class="offline-double-btn" onclick="claimWheelSpin()">
+                    📺 КРУТИТЬ!
+                </button>
+            </div>
+        </div>
+
+        <!-- Нижняя панель разработчика -->
+        <div class="footer-panel">
+            <button class="reset-btn" onclick="hardResetGame()">⚙️ Сбросить весь прогресс</button>
+        </div>
+    </div>
+    
+    <script src="//sad.adsgram.ai/js/sad.min.js"></script>
+    <script src="main.js" defer></script>
+</body>
+</html>
