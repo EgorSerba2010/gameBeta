@@ -426,8 +426,7 @@ function saveGame() {
         discoveredCards: discoveredCards,
         lastSaveTime: Date.now(),
         lastAdWatchTime: lastAdWatchTime,
-        doubleIncomeUntil: doubleIncomeUntil,
-        hyperIncomeUntil: hyperIncomeUntil
+        doubleIncomeUntil: doubleIncomeUntil
     };
     localStorage.setItem('clicker_game_save', JSON.stringify(gameState));
 }
@@ -456,7 +455,6 @@ function loadGame() {
             if (gameState.discoveredCards) discoveredCards = gameState.discoveredCards;
             lastAdWatchTime = gameState.lastAdWatchTime || 0;
             doubleIncomeUntil = gameState.doubleIncomeUntil || 0;
-            hyperIncomeUntil = gameState.hyperIncomeUntil || 0;
 
             Object.keys(prices).forEach(val => {
                 const priceEl = document.getElementById(`price-${val}`);
@@ -1092,7 +1090,7 @@ function createCard(value, customLeft = null, customTop = null, playSpawnAnim = 
     });
 
     // === ДЕСКТОПНЫЕ СОБЫТИЯ МЫШИ (ПК) ===
-    
+
     item.addEventListener('mousedown', (e) => {
         touchStartTime = Date.now();
         const rect = item.getBoundingClientRect();
