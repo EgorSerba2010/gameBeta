@@ -1028,7 +1028,84 @@ function createCard(value, customLeft = null, customTop = null, playSpawnAnim = 
         }
     }, { passive: false });
 
-    item.addEventListener('touchend', (e) => {
+
+
+
+    // item.addEventListener('touchend', (e) => {
+    //     item.classList.remove('dragging');
+    //     const touchDuration = Date.now() - touchStartTime;
+        
+    //     // МОБИЛЬНЫЙ ТАП ПО КАРТОЧКЕ — Включаем clickSound, считаем КРИТ и х2 буст
+    //     if (touchDuration < 250 && !isMoving) {
+    //         const cardValue = Number(item.getAttribute('data-value'));
+            
+    //         // Проверяем, активен ли Золотой Век прямо сейчас
+    //         const isGoldAge = doubleIncomeUntil > Date.now();
+    //         // Проверяем, активен ли новый буст х3 из Колеса Фортуны
+    //         const isClickBoost = clickBoostUntil > Date.now();
+    //         console.log(isClickBoost)
+    //         // Базовое золото за клик (удваивается, если буст тикает)
+    //         const baseClickValue = cardValue;
+    //         if (isGoldAge) baseClickValue *= 2;
+    //         if (isClickBoost) baseClickValue *= 3; // Умножаем на 3!
+            
+    //         // Расчет критического удара
+    //         const critChance = (upgrades.crit ? upgrades.crit.level : 0) * 5; 
+    //         const isCritHit = (Math.random() * 100) < critChance;
+            
+    //         if (isCritHit) {
+    //             // Если выпал КРИТ, умножаем уже увеличенное бустом базовое золото на 10!
+    //             const critValue = baseClickValue * 10;
+    //             updateBalance(critValue);
+    //             spawnFloatingText(`+${formatNumber(critValue)} $`, item.style.left, item.style.top, false, true);
+    //         } else {
+    //             updateBalance(baseClickValue);
+    //             spawnFloatingText(`+${formatNumber(baseClickValue)} $`, item.style.left, item.style.top);
+    //         }
+            
+    //         clickSound.currentTime = 0;
+    //         clickSound.play().catch(err => console.log(err));
+            
+    //         item.classList.add('click-anim');
+    //         setTimeout(() => { item.classList.remove('click-anim'); }, 150);
+    //         saveGame();
+    //         return;
+    //     }
+        
+    //     const changedTouch = e.changedTouches[0];
+    //     const currentLeftPx = parseFloat(item.style.left);
+    //     const currentTopPx = parseFloat(item.style.top);
+    //     const leftPercent = (currentLeftPx / sandbox.clientWidth) * 100;
+    //     const topPercent = (currentTopPx / sandbox.clientHeight) * 100;
+        
+    //     item.style.left = `${leftPercent}%`;
+    //     item.style.top = `${topPercent}%`;
+        
+    //     item.style.display = 'none';
+    //     const targetElement = document.elementFromPoint(changedTouch.clientX, changedTouch.clientY);
+    //     item.style.display = 'flex'; 
+        
+    //     if (targetElement && targetElement.classList.contains('drag-item') && targetElement !== item && targetElement.textContent === item.textContent) {
+    //         targetElement.classList.remove('hovered');
+    //         handleCardsMerge(targetElement, item); 
+    //     } else {
+    //         document.querySelectorAll('.drag-item').forEach(c => c.classList.remove('hovered'));
+    //         saveGame();
+    //     }
+    // });
+
+    // === ДЕСКТОПНЫЕ СОБЫТИЯ МЫШИ (ПК) ===
+    
+    
+    
+    item.addEventListener('mousedown', (e) => {
+        touchStartTime = Date.now();
+        const rect = item.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+    });
+
+    item.addEventListener('mouseup', (e) => {
         item.classList.remove('dragging');
         const touchDuration = Date.now() - touchStartTime;
         
@@ -1038,8 +1115,12 @@ function createCard(value, customLeft = null, customTop = null, playSpawnAnim = 
             
             // Проверяем, активен ли Золотой Век прямо сейчас
             const isGoldAge = doubleIncomeUntil > Date.now();
-            // Базовое золото за клик (удваивается, если буст тикает)
-            const baseClickValue = isGoldAge ? cardValue * 2 : cardValue;
+            const isClickBoost = clickBoostUntil > Date.now();
+            console.log(isClickBoost)
+
+            let baseClickValue = cardValue;
+            if (isGoldAge) baseClickValue *= 2;
+            if (isClickBoost) baseClickValue *= 3; // Умножаем на 3!
             
             // Расчет критического удара
             const critChance = (upgrades.crit ? upgrades.crit.level : 0) * 5; 
@@ -1084,45 +1165,6 @@ function createCard(value, customLeft = null, customTop = null, playSpawnAnim = 
             document.querySelectorAll('.drag-item').forEach(c => c.classList.remove('hovered'));
             saveGame();
         }
-    });
-
-    // === ДЕСКТОПНЫЕ СОБЫТИЯ МЫШИ (ПК) ===
-    item.addEventListener('mousedown', (e) => {
-        const rect = item.getBoundingClientRect();
-        offsetX = e.clientX - rect.left;
-        offsetY = e.clientY - rect.top;
-    });
-
-    item.addEventListener('click', (e) => {
-        item.classList.add('click-anim');
-        setTimeout(() => { item.classList.remove('click-anim'); }, 150);
-        const cardValue = Number(item.getAttribute('data-value'));
-        
-        const isGoldAge = (typeof doubleIncomeUntil !== 'undefined' && doubleIncomeUntil > Date.now());
-        const isClickBoost = (clickBoostUntil > Date.now());
-        
-        let baseClickValue = cardValue;
-        if (isGoldAge) baseClickValue *= 2;
-        if (isClickBoost) baseClickValue = cardValue * 3; // Умножаем на 3!
-        
-        const critChance = (upgrades.crit ? upgrades.crit.level : 0) * 5;
-        const isCritHit = (Math.random() * 100) < critChance;
-        
-        if (isCritHit) {
-            const critValue = baseClickValue * 10;
-            updateBalance(critValue);
-            spawnFloatingText(`КРИТ! +${formatNumber(critValue)} $`, item.style.left, item.style.top, false, true);
-        } else {
-            updateBalance(baseClickValue);
-            spawnFloatingText(`+${baseClickValue} $`, item.style.left, item.style.top);
-            console.log(baseClickValue)
-        }
-        
-        clickSound.currentTime = 0;
-        clickSound.play().catch(err => console.log(err));
-        
-        calculatePPS(); 
-        saveGame(); 
     });
 
 
@@ -1889,7 +1931,7 @@ function claimWheelSpin() {
                 break;
 
             case 4: // 🖱️ Сектор 4: Клики Х3 на 5 минут
-                const baseClickTime = Math.max(clickBoostUntil || 0, Date.now());
+                const baseClickTime = Math.max(clickBoostUntil, Date.now());
                 clickBoostUntil = baseClickTime + (5 * 60 * 1000); // Прибавляем 5 минут в миллисекундах
                 
                 if (typeof spawnFloatingText === 'function') {
